@@ -1,4 +1,4 @@
-id,rompecabezas_id,nombre,num_piezas,orden_narrativo
+serial,rompecabezas_serial,nombre,num_piezas,orden_narrativo
 RC005-F1,RC005,Zorro grande durmiendo,3,1
 RC005-F2,RC005,Zorro mediano,2,2
 RC005-F3,RC005,Zorro pequeño con cola,1,3

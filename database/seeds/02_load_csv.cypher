@@ -6,6 +6,9 @@
 // LOAD CSV requiere que el repo este publico y que los CSVs hayan sido
 // pusheados antes de correr este script.
 //
+// La clave de negocio de cada nodo es 'serial'. Las columnas *_serial de los
+// CSV de relaciones referencian ese serial.
+//
 // Orden de carga:
 //   1) Rompecabezas (nodos)
 //   2) Figuras (nodos)
@@ -17,7 +20,7 @@
 // ---------- 1) Nodos Rompecabezas ----------
 LOAD CSV WITH HEADERS FROM
   'https://raw.githubusercontent.com/FerAHMz/proy3-md/main/database/data/rompecabezas.csv' AS row
-MERGE (r:Rompecabezas {id: row.id})
+MERGE (r:Rompecabezas {serial: row.serial})
 SET r.nombre = row.nombre,
     r.tematica = row.tematica,
     r.tipo_estructura = row.tipo_estructura,
@@ -30,7 +33,7 @@ SET r.nombre = row.nombre,
 // ---------- 2) Nodos Figura ----------
 LOAD CSV WITH HEADERS FROM
   'https://raw.githubusercontent.com/FerAHMz/proy3-md/main/database/data/figuras.csv' AS row
-MERGE (f:Figura {id: row.id})
+MERGE (f:Figura {serial: row.serial})
 SET f.nombre = row.nombre,
     f.num_piezas = toInteger(row.num_piezas),
     f.orden_narrativo = toInteger(row.orden_narrativo);
@@ -41,8 +44,8 @@ SET f.nombre = row.nombre,
 // CSV y se mapean a null aqui.
 LOAD CSV WITH HEADERS FROM
   'https://raw.githubusercontent.com/FerAHMz/proy3-md/main/database/data/piezas.csv' AS row
-MERGE (p:Pieza {id: row.id})
-SET p.rompecabezas_id = row.rompecabezas_id,
+MERGE (p:Pieza {serial: row.serial})
+SET p.rompecabezas_serial = row.rompecabezas_serial,
     p.tipo = row.tipo,
     p.forma = row.forma,
     p.presente = (row.presente = 'true'),
@@ -59,38 +62,38 @@ SET p.rompecabezas_id = row.rompecabezas_id,
 // ---------- 4) Relacion EN (Figura -> Rompecabezas) ----------
 LOAD CSV WITH HEADERS FROM
   'https://raw.githubusercontent.com/FerAHMz/proy3-md/main/database/data/en.csv' AS row
-MATCH (f:Figura {id: row.figura_id})
-MATCH (r:Rompecabezas {id: row.rompecabezas_id})
+MATCH (f:Figura {serial: row.figura_serial})
+MATCH (r:Rompecabezas {serial: row.rompecabezas_serial})
 MERGE (f)-[:EN]->(r);
 
 
 // ---------- 5) Relacion PERTENECE_A (Pieza -> Rompecabezas) ----------
 LOAD CSV WITH HEADERS FROM
   'https://raw.githubusercontent.com/FerAHMz/proy3-md/main/database/data/pertenece_a.csv' AS row
-MATCH (p:Pieza {id: row.pieza_id})
-MATCH (r:Rompecabezas {id: row.rompecabezas_id})
+MATCH (p:Pieza {serial: row.pieza_serial})
+MATCH (r:Rompecabezas {serial: row.rompecabezas_serial})
 MERGE (p)-[:PERTENECE_A]->(r);
 
 
 // ---------- 6) Relacion PARTE_DE (Pieza -> Figura) ----------
 LOAD CSV WITH HEADERS FROM
   'https://raw.githubusercontent.com/FerAHMz/proy3-md/main/database/data/parte_de.csv' AS row
-MATCH (p:Pieza {id: row.pieza_id})
-MATCH (f:Figura {id: row.figura_id})
+MATCH (p:Pieza {serial: row.pieza_serial})
+MATCH (f:Figura {serial: row.figura_serial})
 MERGE (p)-[:PARTE_DE]->(f);
 
 
 // ---------- 7) Relacion SIGUIENTE (Pieza -> Pieza) ----------
 LOAD CSV WITH HEADERS FROM
   'https://raw.githubusercontent.com/FerAHMz/proy3-md/main/database/data/siguiente.csv' AS row
-MATCH (a:Pieza {id: row.from_pieza_id})
-MATCH (b:Pieza {id: row.to_pieza_id})
+MATCH (a:Pieza {serial: row.from_pieza_serial})
+MATCH (b:Pieza {serial: row.to_pieza_serial})
 MERGE (a)-[:SIGUIENTE]->(b);
 
 
 // ---------- 8) Relacion CONECTA_CON (Pieza -> Pieza con lado) ----------
 LOAD CSV WITH HEADERS FROM
   'https://raw.githubusercontent.com/FerAHMz/proy3-md/main/database/data/conecta_con.csv' AS row
-MATCH (a:Pieza {id: row.from_pieza_id})
-MATCH (b:Pieza {id: row.to_pieza_id})
+MATCH (a:Pieza {serial: row.from_pieza_serial})
+MATCH (b:Pieza {serial: row.to_pieza_serial})
 MERGE (a)-[:CONECTA_CON {lado: row.lado}]->(b);

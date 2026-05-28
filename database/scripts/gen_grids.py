@@ -147,7 +147,7 @@ def build_rows() -> Dict[str, List[dict]]:
         lados = generar_lados(filas, columnas)
 
         rompecabezas.append({
-            "id": grid["id"],
+            "serial": grid["id"],
             "nombre": grid["nombre"],
             "tematica": grid["tematica"],
             "tipo_estructura": "grid",
@@ -165,8 +165,8 @@ def build_rows() -> Dict[str, List[dict]]:
                 desc = descripciones.get((f, c), f"Pieza ({f},{c})")
 
                 piezas.append({
-                    "id": pid,
-                    "rompecabezas_id": grid["id"],
+                    "serial": pid,
+                    "rompecabezas_serial": grid["id"],
                     "tipo": tipo,
                     "forma": "rectangular",
                     "presente": "true",
@@ -181,16 +181,16 @@ def build_rows() -> Dict[str, List[dict]]:
                 })
 
                 pertenece_a.append({
-                    "pieza_id": pid,
-                    "rompecabezas_id": grid["id"],
+                    "pieza_serial": pid,
+                    "rompecabezas_serial": grid["id"],
                 })
 
         # CONECTA_CON horizontal (cada pieza con su vecino de la derecha)
         for f in range(1, filas + 1):
             for c in range(1, columnas):
                 conecta_con.append({
-                    "from_pieza_id": f"{grid['id']}-P{f:02d}-{c:02d}",
-                    "to_pieza_id": f"{grid['id']}-P{f:02d}-{c+1:02d}",
+                    "from_pieza_serial": f"{grid['id']}-P{f:02d}-{c:02d}",
+                    "to_pieza_serial": f"{grid['id']}-P{f:02d}-{c+1:02d}",
                     "lado": "derecha",
                 })
 
@@ -198,8 +198,8 @@ def build_rows() -> Dict[str, List[dict]]:
         for f in range(1, filas):
             for c in range(1, columnas + 1):
                 conecta_con.append({
-                    "from_pieza_id": f"{grid['id']}-P{f:02d}-{c:02d}",
-                    "to_pieza_id": f"{grid['id']}-P{f+1:02d}-{c:02d}",
+                    "from_pieza_serial": f"{grid['id']}-P{f:02d}-{c:02d}",
+                    "to_pieza_serial": f"{grid['id']}-P{f+1:02d}-{c:02d}",
                     "lado": "abajo",
                 })
 

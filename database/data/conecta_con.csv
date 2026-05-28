@@ -1,4 +1,4 @@
-from_pieza_id,to_pieza_id,lado
+from_pieza_serial,to_pieza_serial,lado
 RC001-P01-01,RC001-P01-02,derecha
 RC001-P01-02,RC001-P01-03,derecha
 RC001-P01-03,RC001-P01-04,derecha

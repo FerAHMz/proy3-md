@@ -1,4 +1,4 @@
-from_pieza_id,to_pieza_id
+from_pieza_serial,to_pieza_serial
 RC006-P01,RC006-P02
 RC006-P02,RC006-P03
 RC006-P03,RC006-P04

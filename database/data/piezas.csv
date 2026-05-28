@@ -1,4 +1,4 @@
-id,rompecabezas_id,tipo,forma,presente,descripcion,fila,columna,numero,lado_arriba,lado_abajo,lado_izquierda,lado_derecha
+serial,rompecabezas_serial,tipo,forma,presente,descripcion,fila,columna,numero,lado_arriba,lado_abajo,lado_izquierda,lado_derecha
 RC001-P01-01,RC001,esquina,rectangular,true,Esquina superior izquierda - árbol,1,1,,plano,abertura,plano,abertura
 RC001-P01-02,RC001,borde,rectangular,true,"Pieza (1,2)",1,2,,plano,abertura,saliente,saliente
 RC001-P01-03,RC001,borde,rectangular,true,"Pieza (1,3)",1,3,,plano,saliente,abertura,saliente

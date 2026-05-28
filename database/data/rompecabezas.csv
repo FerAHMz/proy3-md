@@ -1,4 +1,4 @@
-id,nombre,tematica,tipo_estructura,total_piezas,num_figuras,filas,columnas
+serial,nombre,tematica,tipo_estructura,total_piezas,num_figuras,filas,columnas
 RC001,My Best Puzzle - Animales del Bosque,Animales del bosque,grid,24,1,4,6
 RC002,Dinosaurios Prehistóricos,Dinosaurios,grid,24,1,4,6
 RC003,Espacio y Planetas,Espacio,grid,24,1,4,6

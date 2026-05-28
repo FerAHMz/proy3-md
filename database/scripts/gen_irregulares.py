@@ -202,7 +202,7 @@ def build_rows() -> Dict[str, List[dict]]:
 
     for rc in IRREGULARES:
         rompecabezas.append({
-            "id": rc["id"],
+            "serial": rc["id"],
             "nombre": rc["nombre"],
             "tematica": rc["tematica"],
             "tipo_estructura": rc["tipo_estructura"],
@@ -214,18 +214,18 @@ def build_rows() -> Dict[str, List[dict]]:
 
         for figura in rc["figuras"]:
             figuras.append({
-                "id": figura["id"],
-                "rompecabezas_id": rc["id"],
+                "serial": figura["id"],
+                "rompecabezas_serial": rc["id"],
                 "nombre": figura["nombre"],
                 "num_piezas": figura["num_piezas"],
                 "orden_narrativo": figura["orden_narrativo"],
             })
-            en.append({"figura_id": figura["id"], "rompecabezas_id": rc["id"]})
+            en.append({"figura_serial": figura["id"], "rompecabezas_serial": rc["id"]})
 
         for pieza in rc["piezas"]:
             piezas.append({
-                "id": pieza["id"],
-                "rompecabezas_id": rc["id"],
+                "serial": pieza["id"],
+                "rompecabezas_serial": rc["id"],
                 "tipo": "irregular",
                 "forma": "irregular",
                 "presente": "true",
@@ -239,22 +239,22 @@ def build_rows() -> Dict[str, List[dict]]:
                 "lado_derecha": "",
             })
             pertenece_a.append({
-                "pieza_id": pieza["id"],
-                "rompecabezas_id": rc["id"],
+                "pieza_serial": pieza["id"],
+                "rompecabezas_serial": rc["id"],
             })
             if "figura" in pieza:
                 parte_de.append({
-                    "pieza_id": pieza["id"],
-                    "figura_id": pieza["figura"],
+                    "pieza_serial": pieza["id"],
+                    "figura_serial": pieza["figura"],
                 })
 
         for src, dst in rc["siguiente"]:
-            siguiente.append({"from_pieza_id": src, "to_pieza_id": dst})
+            siguiente.append({"from_pieza_serial": src, "to_pieza_serial": dst})
 
         for src, dst, lado in rc["conecta_con"]:
             conecta_con.append({
-                "from_pieza_id": src,
-                "to_pieza_id": dst,
+                "from_pieza_serial": src,
+                "to_pieza_serial": dst,
                 "lado": lado,
             })
 

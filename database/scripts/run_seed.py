@@ -147,9 +147,9 @@ def verify_seed(driver: Driver) -> None:
             OPTIONAL MATCH (p:Pieza)-[:PERTENECE_A]->(r)
             OPTIONAL MATCH (f:Figura)-[:EN]->(r)
             WITH r, count(DISTINCT p) AS piezas, count(DISTINCT f) AS figuras
-            RETURN r.id AS id, r.nombre AS nombre, r.tipo_estructura AS tipo,
+            RETURN r.serial AS serial, r.nombre AS nombre, r.tipo_estructura AS tipo,
                    r.total_piezas AS esperadas, piezas AS reales, figuras AS figs
-            ORDER BY r.id
+            ORDER BY r.serial
             """
         )
         for row in rows:
@@ -157,7 +157,7 @@ def verify_seed(driver: Driver) -> None:
             logger.info(
                 "  [%s] %s %-22s piezas: %2d/%2d figuras: %d - %s",
                 estado,
-                row["id"],
+                row["serial"],
                 row["tipo"],
                 row["reales"],
                 row["esperadas"],
@@ -169,8 +169,8 @@ def verify_seed(driver: Driver) -> None:
         rows = session.run(
             """
             MATCH (a:Pieza)-[c:CONECTA_CON]->(b:Pieza)
-            WHERE a.rompecabezas_id = b.rompecabezas_id
-            RETURN a.rompecabezas_id AS rc, count(*) AS conexiones
+            WHERE a.rompecabezas_serial = b.rompecabezas_serial
+            RETURN a.rompecabezas_serial AS rc, count(*) AS conexiones
             ORDER BY rc
             """
         )
@@ -214,7 +214,7 @@ def verify_seed(driver: Driver) -> None:
 
         bfs = session.run(
             """
-            MATCH (inicio:Pieza {id: 'RC001-P02-03'})
+            MATCH (inicio:Pieza {serial: 'RC001-P02-03'})
             MATCH path = (inicio)-[:CONECTA_CON*0..]-(siguiente:Pieza)
             WHERE ALL(p IN nodes(path) WHERE p.presente = true)
             WITH siguiente, min(length(path)) AS paso

@@ -31,7 +31,7 @@ def cargar_piezas_grids(path: Path) -> Dict[str, Dict[Tuple[int, int], Dict[str,
         for row in reader:
             if row.get("fila") == "" or row.get("columna") == "":
                 continue
-            rc_id = row["rompecabezas_id"]
+            rc_id = row["rompecabezas_serial"]
             coord = (int(row["fila"]), int(row["columna"]))
             rcs.setdefault(rc_id, {})[coord] = row
     return rcs

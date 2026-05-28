@@ -17,22 +17,22 @@ DATA_DIR = DATABASE_DIR / "data"
 # Headers fijos por tabla. El orden define como sale en el CSV.
 HEADERS: Dict[str, List[str]] = {
     "rompecabezas": [
-        "id", "nombre", "tematica", "tipo_estructura",
+        "serial", "nombre", "tematica", "tipo_estructura",
         "total_piezas", "num_figuras", "filas", "columnas",
     ],
     "figuras": [
-        "id", "rompecabezas_id", "nombre", "num_piezas", "orden_narrativo",
+        "serial", "rompecabezas_serial", "nombre", "num_piezas", "orden_narrativo",
     ],
     "piezas": [
-        "id", "rompecabezas_id", "tipo", "forma", "presente", "descripcion",
+        "serial", "rompecabezas_serial", "tipo", "forma", "presente", "descripcion",
         "fila", "columna", "numero",
         "lado_arriba", "lado_abajo", "lado_izquierda", "lado_derecha",
     ],
-    "pertenece_a": ["pieza_id", "rompecabezas_id"],
-    "parte_de": ["pieza_id", "figura_id"],
-    "en": ["figura_id", "rompecabezas_id"],
-    "siguiente": ["from_pieza_id", "to_pieza_id"],
-    "conecta_con": ["from_pieza_id", "to_pieza_id", "lado"],
+    "pertenece_a": ["pieza_serial", "rompecabezas_serial"],
+    "parte_de": ["pieza_serial", "figura_serial"],
+    "en": ["figura_serial", "rompecabezas_serial"],
+    "siguiente": ["from_pieza_serial", "to_pieza_serial"],
+    "conecta_con": ["from_pieza_serial", "to_pieza_serial", "lado"],
 }
 
 logger = logging.getLogger("gen_csvs")
