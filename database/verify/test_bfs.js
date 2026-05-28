@@ -1,9 +1,10 @@
 import dotenv from 'dotenv';
 import { assemblePuzzle } from '../scripts/bfs.js';
 import path from 'path';
+import { fileURLToPath } from 'url';
 
-// Load .env relative to the database folder
-dotenv.config();
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
+dotenv.config({ path: path.resolve(__dirname, '../.env') });
 
 const auth = {
   uri: process.env.NEO4J_URI,
@@ -12,7 +13,7 @@ const auth = {
 };
 
 async function testPuzzles() {
-  const ids = ['RC001', 'RC005', 'RC006', 'RC007']; // Uno de cada tipología principal
+  const ids = ['RC001', 'RC005', 'RC006', 'RC007', 'RC008']; // Uno de cada tipología principal + mixto adicional
   
   for (const pid of ids) {
     console.log(`\n=================================================`);

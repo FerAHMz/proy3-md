@@ -1,19 +1,6 @@
 import neo4j from 'neo4j-driver';
 import { getStartingPiecesQuery, getNeighborsQuery } from './queries.js';
-
-/**
- * Invierte la dirección de un lado de la cuadrícula si la pieza conectada es el origen.
- */
-function invertLado(lado) {
-  if (!lado) return "un lado";
-  const inversos = {
-    'arriba': 'abajo',
-    'abajo': 'arriba',
-    'izquierda': 'derecha',
-    'derecha': 'izquierda'
-  };
-  return inversos[lado] || lado;
-}
+import { invertLado } from './util_lados.js';
 
 /**
  * Configura la sesión de base de datos e inicializa el armado.
@@ -56,7 +43,7 @@ export async function assemblePuzzle(puzzleId, auth) {
         const currentId = queue.shift();
         
         // Query de vecinos
-        const neighborResult = await session.run(getNeighborsQuery, { pieceId: currentId });
+        const neighborResult = await session.run(getNeighborsQuery, { pieceId: currentId, presentOnly: false });
         
         for (const neighborRecord of neighborResult.records) {
           const neighbor = neighborRecord.get('node');
