@@ -24,3 +24,7 @@ node_modules/
 package-lock.json
 *.swp
 
+# Build output
+dist/
+*.tsbuildinfo
+
