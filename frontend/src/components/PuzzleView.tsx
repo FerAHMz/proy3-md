@@ -223,6 +223,7 @@ export function PuzzleView({ puzzle, onBack }: Props) {
           {mode === 'assemble' && (
             <AssemblyMode
               pasos={assembly?.pasos ?? []}
+              piezas={detail?.piezas ?? []}
               loading={loadingAssembly}
               startSerial={startSerial}
               onClearStart={() => setStartSerial(null)}

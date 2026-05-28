@@ -1,8 +1,10 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { parseStep, placedAfter, type ParsedStep } from '../lib/parseSteps';
+import type { Pieza } from '../types';
 
 interface Props {
   pasos: string[];
+  piezas: Pieza[];
   loading: boolean;
   startSerial: string | null;
   onClearStart: () => void;
@@ -19,12 +21,18 @@ const SPEEDS = [
 
 export function AssemblyMode({
   pasos,
+  piezas,
   loading,
   startSerial,
   onClearStart,
   onStateChange,
   onReload,
 }: Props) {
+  const pieceLookup = useMemo(() => {
+    const m = new Map<string, Pieza>();
+    for (const p of piezas) m.set(p.serial, p);
+    return m;
+  }, [piezas]);
   const [idx, setIdx] = useState(-1);
   const [playing, setPlaying] = useState(false);
   const [speedIdx, setSpeedIdx] = useState(1);
@@ -183,7 +191,7 @@ export function AssemblyMode({
 
       <div className="rounded-lg border border-slate-800 bg-slate-950/60 p-3">
         {current ? (
-          <StepLine step={current} />
+          <StepLine step={current} lookup={s => pieceLookup.get(s)} />
         ) : (
           <div className="text-xs text-slate-500">
             Presiona ▶ para iniciar el armado.
@@ -216,49 +224,81 @@ export function AssemblyMode({
   );
 }
 
-function StepLine({ step }: { step: ParsedStep }) {
+// Nombre corto y legible de una pieza para narrar en texto.
+function friendlyName(p: Pieza | undefined, serial: string): string {
+  if (!p) return serial;
+  if (p.numero != null) return `pieza #${p.numero}`;
+  if (p.descripcion) return p.descripcion;
+  if (p.fila != null && p.columna != null) return `pieza (${p.fila}, ${p.columna})`;
+  return serial;
+}
+
+const LADO_TEXT: Record<string, string> = {
+  arriba: 'por arriba',
+  abajo: 'por abajo',
+  izquierda: 'por el lado izquierdo',
+  derecha: 'por el lado derecho',
+};
+
+type Lookup = (serial: string) => Pieza | undefined;
+
+function StepLine({ step, lookup }: { step: ParsedStep; lookup: Lookup }) {
   if (step.kind === 'header')
     return <div className="text-xs font-semibold text-slate-300">{step.text}</div>;
+
   if (step.kind === 'figura')
     return (
       <div className="text-xs text-amber-300">
-        ▸ Armando figura: <span className="font-semibold">{step.figura}</span>
+        Ahora arma la figura{' '}
+        <span className="font-semibold">{step.figura}</span>.
       </div>
     );
-  if (step.kind === 'start')
+
+  if (step.kind === 'start') {
+    const name = friendlyName(lookup(step.piece), step.piece);
     return (
-      <div className="text-xs text-emerald-300">
-        ◆ Colocando primera pieza <code className="font-mono text-emerald-200">{step.piece}</code>
-      </div>
-    );
-  if (step.kind === 'connect') {
-    if (step.kindRel === 'BRIDGE_SIGUIENTE') {
-      const salta = step.saltadas?.length
-        ? `, saltando ${step.saltadas.join(', ')}`
-        : '';
-      return (
-        <div className="text-xs text-amber-200">
-          <code className="font-mono text-amber-300">{step.from}</code>{' '}
-          <span className="text-amber-400">→</span>{' '}
-          <code className="font-mono text-amber-300">{step.to}</code>{' '}
-          <span className="text-amber-400/80">por orden numérico (sin contacto físico{salta})</span>
-        </div>
-      );
-    }
-    const detail =
-      step.kindRel === 'SIGUIENTE'
-        ? 'siguiente en la secuencia'
-        : step.lado
-        ? `por el lado ${step.lado}`
-        : 'por ensamblaje';
-    return (
-      <div className="text-xs text-slate-200">
-        <code className="font-mono text-sky-300">{step.from}</code>{' '}
-        <span className="text-slate-500">↔</span>{' '}
-        <code className="font-mono text-sky-300">{step.to}</code>{' '}
-        <span className="text-slate-400">{detail}</span>
+      <div className="text-sm leading-relaxed text-emerald-200">
+        Empieza colocando la <span className="font-semibold">{name}</span>.
       </div>
     );
   }
+
+  if (step.kind === 'connect') {
+    const a = friendlyName(lookup(step.from), step.from);
+    const b = friendlyName(lookup(step.to), step.to);
+
+    if (step.kindRel === 'BRIDGE_SIGUIENTE') {
+      const saltos = step.saltadas?.length ?? 0;
+      const detalle = saltos > 0
+        ? `Saltamos ${saltos === 1 ? 'una pieza faltante' : `${saltos} piezas faltantes`}.`
+        : 'No hay contacto físico, pero siguen en orden por número.';
+      return (
+        <div className="text-sm leading-relaxed text-amber-200">
+          Salta de la <span className="font-semibold">{a}</span> a la{' '}
+          <span className="font-semibold">{b}</span> siguiendo el orden numérico.{' '}
+          <span className="text-amber-400/80">{detalle}</span>
+        </div>
+      );
+    }
+
+    if (step.kindRel === 'SIGUIENTE') {
+      return (
+        <div className="text-sm leading-relaxed text-slate-100">
+          Después de la <span className="font-semibold">{a}</span> coloca la{' '}
+          <span className="font-semibold">{b}</span>.
+        </div>
+      );
+    }
+
+    const ladoFrase = step.lado ? LADO_TEXT[step.lado] ?? `por el lado ${step.lado}` : null;
+    return (
+      <div className="text-sm leading-relaxed text-slate-100">
+        Une la <span className="font-semibold">{a}</span> con la{' '}
+        <span className="font-semibold">{b}</span>
+        {ladoFrase ? <> {ladoFrase}.</> : '.'}
+      </div>
+    );
+  }
+
   return <div className="text-xs text-slate-500">{step.text}</div>;
 }
