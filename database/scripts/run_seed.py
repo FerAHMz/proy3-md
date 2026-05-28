@@ -38,7 +38,7 @@ def load_credentials() -> Tuple[str, str, str]:
     load_dotenv(dotenv_path=env_path)
 
     uri = os.getenv("NEO4J_URI")
-    user = os.getenv("NEO4J_USER")
+    user = os.getenv("NEO4J_USERNAME")
     password = os.getenv("NEO4J_PASSWORD")
 
     # Reporta todas las variables faltantes de una sola vez
@@ -46,7 +46,7 @@ def load_credentials() -> Tuple[str, str, str]:
         name
         for name, value in (
             ("NEO4J_URI", uri),
-            ("NEO4J_USER", user),
+            ("NEO4J_USERNAME", user),
             ("NEO4J_PASSWORD", password),
         )
         if not value
