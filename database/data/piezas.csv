@@ -1,0 +1,140 @@
+id,rompecabezas_id,tipo,forma,presente,descripcion,fila,columna,numero,lado_arriba,lado_abajo,lado_izquierda,lado_derecha
+RC001-P01-01,RC001,esquina,rectangular,true,Esquina superior izquierda - árbol,1,1,,plano,abertura,plano,abertura
+RC001-P01-02,RC001,borde,rectangular,true,"Pieza (1,2)",1,2,,plano,abertura,saliente,saliente
+RC001-P01-03,RC001,borde,rectangular,true,"Pieza (1,3)",1,3,,plano,saliente,abertura,saliente
+RC001-P01-04,RC001,borde,rectangular,true,"Pieza (1,4)",1,4,,plano,saliente,abertura,saliente
+RC001-P01-05,RC001,borde,rectangular,true,"Pieza (1,5)",1,5,,plano,abertura,abertura,abertura
+RC001-P01-06,RC001,esquina,rectangular,true,Esquina superior derecha - cielo,1,6,,plano,saliente,saliente,plano
+RC001-P02-01,RC001,borde,rectangular,true,"Pieza (2,1)",2,1,,saliente,saliente,plano,abertura
+RC001-P02-02,RC001,interior,rectangular,true,"Pieza (2,2)",2,2,,saliente,saliente,saliente,abertura
+RC001-P02-03,RC001,interior,rectangular,true,Cabeza del zorro principal,2,3,,abertura,abertura,saliente,saliente
+RC001-P02-04,RC001,interior,rectangular,true,"Pieza (2,4)",2,4,,abertura,abertura,abertura,saliente
+RC001-P02-05,RC001,interior,rectangular,true,Panda con bufanda,2,5,,saliente,abertura,abertura,saliente
+RC001-P02-06,RC001,borde,rectangular,true,"Pieza (2,6)",2,6,,abertura,abertura,abertura,plano
+RC001-P03-01,RC001,borde,rectangular,true,Cerdito con bufanda,3,1,,abertura,abertura,plano,saliente
+RC001-P03-02,RC001,interior,rectangular,true,"Pieza (3,2)",3,2,,abertura,abertura,abertura,abertura
+RC001-P03-03,RC001,interior,rectangular,true,Bufanda del zorro,3,3,,saliente,saliente,saliente,saliente
+RC001-P03-04,RC001,interior,rectangular,true,"Pieza (3,4)",3,4,,saliente,abertura,abertura,saliente
+RC001-P03-05,RC001,interior,rectangular,true,"Pieza (3,5)",3,5,,saliente,abertura,abertura,abertura
+RC001-P03-06,RC001,borde,rectangular,true,Mapache con bufanda,3,6,,saliente,abertura,saliente,plano
+RC001-P04-01,RC001,esquina,rectangular,true,Esquina inferior izquierda - pasto,4,1,,saliente,plano,plano,abertura
+RC001-P04-02,RC001,borde,rectangular,true,"Pieza (4,2)",4,2,,saliente,plano,saliente,saliente
+RC001-P04-03,RC001,borde,rectangular,true,"Pieza (4,3)",4,3,,abertura,plano,abertura,abertura
+RC001-P04-04,RC001,borde,rectangular,true,"Pieza (4,4)",4,4,,saliente,plano,saliente,abertura
+RC001-P04-05,RC001,borde,rectangular,true,"Pieza (4,5)",4,5,,saliente,plano,saliente,saliente
+RC001-P04-06,RC001,esquina,rectangular,true,Esquina inferior derecha - arbusto,4,6,,saliente,plano,abertura,plano
+RC002-P01-01,RC002,esquina,rectangular,true,"Pieza (1,1)",1,1,,plano,saliente,plano,abertura
+RC002-P01-02,RC002,borde,rectangular,true,"Pieza (1,2)",1,2,,plano,saliente,saliente,abertura
+RC002-P01-03,RC002,borde,rectangular,true,Cielo prehistórico,1,3,,plano,abertura,saliente,abertura
+RC002-P01-04,RC002,borde,rectangular,true,"Pieza (1,4)",1,4,,plano,abertura,saliente,saliente
+RC002-P01-05,RC002,borde,rectangular,true,"Pieza (1,5)",1,5,,plano,abertura,abertura,saliente
+RC002-P01-06,RC002,esquina,rectangular,true,"Pieza (1,6)",1,6,,plano,abertura,abertura,plano
+RC002-P02-01,RC002,borde,rectangular,true,"Pieza (2,1)",2,1,,abertura,abertura,plano,saliente
+RC002-P02-02,RC002,interior,rectangular,true,"Pieza (2,2)",2,2,,abertura,abertura,abertura,saliente
+RC002-P02-03,RC002,interior,rectangular,true,T-Rex rugiendo,2,3,,saliente,saliente,abertura,saliente
+RC002-P02-04,RC002,interior,rectangular,true,"Pieza (2,4)",2,4,,saliente,saliente,abertura,saliente
+RC002-P02-05,RC002,interior,rectangular,true,Pterodáctilo volando,2,5,,saliente,saliente,abertura,saliente
+RC002-P02-06,RC002,borde,rectangular,true,"Pieza (2,6)",2,6,,saliente,saliente,abertura,plano
+RC002-P03-01,RC002,borde,rectangular,true,"Pieza (3,1)",3,1,,saliente,saliente,plano,abertura
+RC002-P03-02,RC002,interior,rectangular,true,Triceratops pastando,3,2,,saliente,abertura,saliente,saliente
+RC002-P03-03,RC002,interior,rectangular,true,"Pieza (3,3)",3,3,,abertura,abertura,abertura,saliente
+RC002-P03-04,RC002,interior,rectangular,true,"Pieza (3,4)",3,4,,abertura,saliente,abertura,saliente
+RC002-P03-05,RC002,interior,rectangular,true,Volcán humeante,3,5,,abertura,abertura,abertura,saliente
+RC002-P03-06,RC002,borde,rectangular,true,"Pieza (3,6)",3,6,,abertura,saliente,abertura,plano
+RC002-P04-01,RC002,esquina,rectangular,true,"Pieza (4,1)",4,1,,abertura,plano,plano,abertura
+RC002-P04-02,RC002,borde,rectangular,true,"Pieza (4,2)",4,2,,saliente,plano,saliente,abertura
+RC002-P04-03,RC002,borde,rectangular,true,"Pieza (4,3)",4,3,,saliente,plano,saliente,abertura
+RC002-P04-04,RC002,borde,rectangular,true,"Pieza (4,4)",4,4,,abertura,plano,saliente,saliente
+RC002-P04-05,RC002,borde,rectangular,true,"Pieza (4,5)",4,5,,saliente,plano,abertura,abertura
+RC002-P04-06,RC002,esquina,rectangular,true,"Pieza (4,6)",4,6,,abertura,plano,saliente,plano
+RC003-P01-01,RC003,esquina,rectangular,true,"Pieza (1,1)",1,1,,plano,abertura,plano,abertura
+RC003-P01-02,RC003,borde,rectangular,true,Astronauta saludando,1,2,,plano,abertura,saliente,saliente
+RC003-P01-03,RC003,borde,rectangular,true,"Pieza (1,3)",1,3,,plano,abertura,abertura,saliente
+RC003-P01-04,RC003,borde,rectangular,true,"Pieza (1,4)",1,4,,plano,abertura,abertura,saliente
+RC003-P01-05,RC003,borde,rectangular,true,"Pieza (1,5)",1,5,,plano,saliente,abertura,abertura
+RC003-P01-06,RC003,esquina,rectangular,true,"Pieza (1,6)",1,6,,plano,abertura,saliente,plano
+RC003-P02-01,RC003,borde,rectangular,true,Tierra azul,2,1,,saliente,abertura,plano,saliente
+RC003-P02-02,RC003,interior,rectangular,true,"Pieza (2,2)",2,2,,saliente,abertura,abertura,abertura
+RC003-P02-03,RC003,interior,rectangular,true,Marte rojo,2,3,,saliente,saliente,saliente,abertura
+RC003-P02-04,RC003,interior,rectangular,true,"Pieza (2,4)",2,4,,saliente,abertura,saliente,saliente
+RC003-P02-05,RC003,interior,rectangular,true,"Pieza (2,5)",2,5,,abertura,saliente,abertura,saliente
+RC003-P02-06,RC003,borde,rectangular,true,"Pieza (2,6)",2,6,,saliente,saliente,abertura,plano
+RC003-P03-01,RC003,borde,rectangular,true,"Pieza (3,1)",3,1,,saliente,saliente,plano,abertura
+RC003-P03-02,RC003,interior,rectangular,true,Cohete despegando,3,2,,saliente,abertura,saliente,abertura
+RC003-P03-03,RC003,interior,rectangular,true,"Pieza (3,3)",3,3,,abertura,abertura,saliente,saliente
+RC003-P03-04,RC003,interior,rectangular,true,"Pieza (3,4)",3,4,,saliente,saliente,abertura,saliente
+RC003-P03-05,RC003,interior,rectangular,true,"Pieza (3,5)",3,5,,abertura,abertura,abertura,saliente
+RC003-P03-06,RC003,borde,rectangular,true,"Pieza (3,6)",3,6,,abertura,saliente,abertura,plano
+RC003-P04-01,RC003,esquina,rectangular,true,Estrellas brillantes,4,1,,abertura,plano,plano,abertura
+RC003-P04-02,RC003,borde,rectangular,true,"Pieza (4,2)",4,2,,saliente,plano,saliente,abertura
+RC003-P04-03,RC003,borde,rectangular,true,Luna sonriente,4,3,,saliente,plano,saliente,saliente
+RC003-P04-04,RC003,borde,rectangular,true,"Pieza (4,4)",4,4,,abertura,plano,abertura,saliente
+RC003-P04-05,RC003,borde,rectangular,true,"Pieza (4,5)",4,5,,saliente,plano,abertura,saliente
+RC003-P04-06,RC003,esquina,rectangular,true,"Pieza (4,6)",4,6,,abertura,plano,abertura,plano
+RC004-P01-01,RC004,esquina,rectangular,true,"Pieza (1,1)",1,1,,plano,saliente,plano,abertura
+RC004-P01-02,RC004,borde,rectangular,true,"Pieza (1,2)",1,2,,plano,saliente,saliente,abertura
+RC004-P01-03,RC004,borde,rectangular,true,"Pieza (1,3)",1,3,,plano,saliente,saliente,saliente
+RC004-P01-04,RC004,borde,rectangular,true,Avión surcando el cielo,1,4,,plano,abertura,abertura,abertura
+RC004-P01-05,RC004,borde,rectangular,true,"Pieza (1,5)",1,5,,plano,abertura,saliente,abertura
+RC004-P01-06,RC004,esquina,rectangular,true,"Pieza (1,6)",1,6,,plano,saliente,saliente,plano
+RC004-P02-01,RC004,borde,rectangular,true,"Pieza (2,1)",2,1,,abertura,saliente,plano,saliente
+RC004-P02-02,RC004,interior,rectangular,true,"Pieza (2,2)",2,2,,abertura,abertura,abertura,abertura
+RC004-P02-03,RC004,interior,rectangular,true,Carro rojo de carreras,2,3,,abertura,saliente,saliente,abertura
+RC004-P02-04,RC004,interior,rectangular,true,"Pieza (2,4)",2,4,,saliente,abertura,saliente,abertura
+RC004-P02-05,RC004,interior,rectangular,true,"Pieza (2,5)",2,5,,saliente,saliente,saliente,abertura
+RC004-P02-06,RC004,borde,rectangular,true,"Pieza (2,6)",2,6,,abertura,saliente,saliente,plano
+RC004-P03-01,RC004,borde,rectangular,true,"Pieza (3,1)",3,1,,abertura,abertura,plano,saliente
+RC004-P03-02,RC004,interior,rectangular,true,Camión amarillo,3,2,,saliente,abertura,abertura,saliente
+RC004-P03-03,RC004,interior,rectangular,true,"Pieza (3,3)",3,3,,abertura,saliente,abertura,saliente
+RC004-P03-04,RC004,interior,rectangular,true,Bicicleta colorida,3,4,,saliente,saliente,abertura,abertura
+RC004-P03-05,RC004,interior,rectangular,true,"Pieza (3,5)",3,5,,abertura,abertura,saliente,abertura
+RC004-P03-06,RC004,borde,rectangular,true,"Pieza (3,6)",3,6,,abertura,abertura,saliente,plano
+RC004-P04-01,RC004,esquina,rectangular,true,"Pieza (4,1)",4,1,,saliente,plano,plano,abertura
+RC004-P04-02,RC004,borde,rectangular,true,"Pieza (4,2)",4,2,,saliente,plano,saliente,saliente
+RC004-P04-03,RC004,borde,rectangular,true,Barco navegando,4,3,,abertura,plano,abertura,saliente
+RC004-P04-04,RC004,borde,rectangular,true,"Pieza (4,4)",4,4,,abertura,plano,abertura,abertura
+RC004-P04-05,RC004,borde,rectangular,true,"Pieza (4,5)",4,5,,saliente,plano,saliente,abertura
+RC004-P04-06,RC004,esquina,rectangular,true,"Pieza (4,6)",4,6,,saliente,plano,saliente,plano
+RC005-P01,RC005,irregular,irregular,true,Cabeza zorro grande,,,,,,,
+RC005-P02,RC005,irregular,irregular,true,Cuerpo zorro grande,,,,,,,
+RC005-P03,RC005,irregular,irregular,true,Cola zorro grande,,,,,,,
+RC005-P04,RC005,irregular,irregular,true,Cabeza zorro mediano,,,,,,,
+RC005-P05,RC005,irregular,irregular,true,Cuerpo zorro mediano,,,,,,,
+RC005-P06,RC005,irregular,irregular,true,Zorro pequeño completo,,,,,,,
+RC006-P01,RC006,irregular,irregular,true,Cabeza con ojos,,,1,,,,
+RC006-P02,RC006,irregular,irregular,true,Ala superior izquierda,,,2,,,,
+RC006-P03,RC006,irregular,irregular,true,Ala media izquierda,,,3,,,,
+RC006-P04,RC006,irregular,irregular,true,Cuello,,,4,,,,
+RC006-P05,RC006,irregular,irregular,true,Pecho,,,5,,,,
+RC006-P06,RC006,irregular,irregular,true,Ala superior derecha,,,6,,,,
+RC006-P07,RC006,irregular,irregular,true,Ala derecha extendida,,,7,,,,
+RC006-P08,RC006,irregular,irregular,true,Pata izquierda,,,8,,,,
+RC006-P09,RC006,irregular,irregular,true,Vientre,,,9,,,,
+RC006-P10,RC006,irregular,irregular,true,Pata derecha,,,10,,,,
+RC007-P01,RC007,irregular,irregular,true,Cuerpo oruga - segmento naranja,,,1,,,,
+RC007-P02,RC007,irregular,irregular,true,Cuerpo oruga - segmento rojo,,,2,,,,
+RC007-P03,RC007,irregular,irregular,true,Cuerpo oruga - cuello morado,,,3,,,,
+RC007-P04,RC007,irregular,irregular,true,Cabeza oruga con gorro,,,4,,,,
+RC007-P05,RC007,irregular,irregular,true,Cara oruga sonriendo,,,5,,,,
+RC007-P06,RC007,irregular,irregular,true,Hoja - parte derecha verde,,,6,,,,
+RC007-P07,RC007,irregular,irregular,true,Hoja - parte izquierda verde,,,7,,,,
+RC007-P08,RC007,irregular,irregular,true,Mariposa - ala superior derecha azul,,,8,,,,
+RC007-P09,RC007,irregular,irregular,true,Mariposa - ala superior izquierda azul,,,9,,,,
+RC007-P10,RC007,irregular,irregular,true,Mariposa - antena derecha rosa,,,10,,,,
+RC007-P11,RC007,irregular,irregular,true,Mariposa - cabeza amarilla,,,11,,,,
+RC007-P12,RC007,irregular,irregular,true,Mariposa - cuerpo naranja,,,12,,,,
+RC007-P13,RC007,irregular,irregular,true,Mariposa - ala inferior derecha azul,,,13,,,,
+RC007-P14,RC007,irregular,irregular,true,Mariposa - ala inferior izquierda azul,,,14,,,,
+RC008-P01,RC008,irregular,irregular,true,Cáscara superior rosa,,,1,,,,
+RC008-P02,RC008,irregular,irregular,true,Polluelo dentro del huevo,,,2,,,,
+RC008-P03,RC008,irregular,irregular,true,Cáscara inferior naranja,,,3,,,,
+RC008-P04,RC008,irregular,irregular,true,Cabeza del patito,,,4,,,,
+RC008-P05,RC008,irregular,irregular,true,Cuerpo verde del patito,,,5,,,,
+RC008-P06,RC008,irregular,irregular,true,Ala roja del patito,,,6,,,,
+RC008-P07,RC008,irregular,irregular,true,Agua azul bajo el patito,,,7,,,,
+RC008-P08,RC008,irregular,irregular,true,Cabeza blanca pato adulto,,,8,,,,
+RC008-P09,RC008,irregular,irregular,true,Cuello verde pato adulto,,,9,,,,
+RC008-P10,RC008,irregular,irregular,true,Cuerpo rosa pato adulto,,,10,,,,
+RC008-P11,RC008,irregular,irregular,true,Ala naranja pato adulto,,,11,,,,
+RC008-P12,RC008,irregular,irregular,true,Pata izquierda azul oscuro,,,12,,,,
+RC008-P13,RC008,irregular,irregular,true,Pata derecha azul claro,,,13,,,,
