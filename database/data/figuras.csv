@@ -1,9 +1,9 @@
 serial,rompecabezas_serial,nombre,num_piezas,orden_narrativo
-RC005-F1,RC005,Zorro grande durmiendo,3,1
-RC005-F2,RC005,Zorro mediano,2,2
-RC005-F3,RC005,Zorro pequeño con cola,1,3
+RC005-F1,RC005,Zorro grande durmiendo,4,1
+RC005-F2,RC005,Zorro mediano,3,2
+RC005-F3,RC005,Zorro pequeño,3,3
 RC007-F1,RC007,Oruga,5,1
-RC007-F2,RC007,Hoja,2,2
+RC007-F2,RC007,Capullo,2,2
 RC007-F3,RC007,Mariposa,7,3
 RC008-F1,RC008,Huevo,3,1
 RC008-F2,RC008,Patito,4,2

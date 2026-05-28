@@ -1,5 +1,6 @@
 # Valida la consistencia de lados leyendo data/piezas.csv (offline).
-# Solo aplica a piezas de grids (las que tienen fila/columna no vacias).
+# Solo aplica a piezas de grids; las irregulares tienen fila/columna de
+# maquetacion pero no lado_*, asi que se ignoran (tipo='irregular').
 
 import csv
 import logging
@@ -29,6 +30,8 @@ def cargar_piezas_grids(path: Path) -> Dict[str, Dict[Tuple[int, int], Dict[str,
     with path.open(encoding="utf-8", newline="") as f:
         reader = csv.DictReader(f)
         for row in reader:
+            if row.get("tipo") == "irregular":
+                continue
             if row.get("fila") == "" or row.get("columna") == "":
                 continue
             rc_id = row["rompecabezas_serial"]
