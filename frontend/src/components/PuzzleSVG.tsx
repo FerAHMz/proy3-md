@@ -1,4 +1,5 @@
 import { useMemo } from 'react';
+import { jigsawPath } from '../lib/jigsaw';
 import { layoutPiezas } from '../lib/layout';
 import type { ConectaCon, Figura, Pieza, Rompecabezas, SiguienteRel } from '../types';
 
@@ -12,8 +13,10 @@ interface Props {
   siguiente: SiguienteRel[];
   stateOf?: (p: Pieza) => PieceVisualState;
   activeEdge?: { from: string; to: string } | null;
+  startSerial?: string | null;
   onPieceClick?: (p: Pieza) => void;
   interactive?: boolean;
+  clickableMissing?: boolean;
 }
 
 const TIPO_FILL: Record<string, string> = {
@@ -23,13 +26,29 @@ const TIPO_FILL: Record<string, string> = {
   irregular: '#a78bfa',
 };
 
+const FIGURA_PALETTE = [
+  '#fb923c', // orange
+  '#06b6d4', // cyan
+  '#a78bfa', // violet
+  '#f43f5e', // rose
+  '#22c55e', // emerald
+  '#eab308', // amber
+];
+
 const STATE_OPACITY: Record<PieceVisualState, number> = {
   idle: 1,
-  missing: 0.25,
+  missing: 0.3,
   placed: 1,
   active: 1,
-  pending: 0.35,
+  pending: 0.4,
 };
+
+function hexAlpha(hex: string, alpha: number): string {
+  const r = parseInt(hex.slice(1, 3), 16);
+  const g = parseInt(hex.slice(3, 5), 16);
+  const b = parseInt(hex.slice(5, 7), 16);
+  return `rgba(${r},${g},${b},${alpha})`;
+}
 
 export function PuzzleSVG({
   rompecabezas,
@@ -39,22 +58,40 @@ export function PuzzleSVG({
   siguiente,
   stateOf,
   activeEdge,
+  startSerial = null,
   onPieceClick,
   interactive = false,
+  clickableMissing = true,
 }: Props) {
   const layout = useMemo(
     () => layoutPiezas(rompecabezas, piezas, figuras),
     [rompecabezas, piezas, figuras]
   );
 
-  const PAD = 24;
+  const figuraColor = useMemo(() => {
+    const sorted = [...figuras].sort(
+      (a, b) => (a.orden_narrativo ?? 0) - (b.orden_narrativo ?? 0)
+    );
+    const m = new Map<string, string>();
+    sorted.forEach((f, i) => m.set(f.serial, FIGURA_PALETTE[i % FIGURA_PALETTE.length]));
+    return m;
+  }, [figuras]);
+
+  const isGrid = rompecabezas.tipo_estructura === 'grid';
+  // PAD mayor en grids da espacio a los tabs de las piezas de borde.
+  const PAD = isGrid ? 32 : 24;
   const vbW = layout.width + PAD * 2;
   const vbH = Math.max(layout.height, 100) + PAD * 2;
 
-  const isGrid = rompecabezas.tipo_estructura === 'grid';
-
-  // Para irregulares se dibujan las aristas para hacer visible la topología.
+  // En grids las piezas ya están adyacentes; dibujar las aristas sería ruido.
   const showEdges = !isGrid;
+
+  const colorFor = (p: Pieza): string => {
+    if (p.figura_serial && figuraColor.has(p.figura_serial)) {
+      return figuraColor.get(p.figura_serial)!;
+    }
+    return TIPO_FILL[p.tipo] ?? '#94a3b8';
+  };
 
   return (
     <svg
@@ -75,39 +112,24 @@ export function PuzzleSVG({
         </filter>
       </defs>
 
-      {/* Calles de figuras (fondo) */}
-      {layout.lanes.map(lane => (
-        <g key={lane.figura.serial}>
+      {/* Bandas por figura */}
+      {layout.lanes.map(lane => {
+        const color = figuraColor.get(lane.figura.serial) ?? '#475569';
+        return (
           <rect
+            key={lane.figura.serial}
             x={lane.x}
             y={lane.y}
             width={lane.w}
             height={lane.h}
             rx={10}
-            fill="rgba(15, 23, 42, 0.5)"
-            stroke="#1e293b"
-            strokeDasharray="4 4"
+            fill={hexAlpha(color, 0.08)}
+            stroke={hexAlpha(color, 0.45)}
+            strokeWidth={1.5}
+            strokeDasharray="4 3"
           />
-          <text
-            x={lane.x + 10}
-            y={lane.y + 14}
-            fontSize={11}
-            fontWeight={600}
-            fill="#94a3b8"
-          >
-            {lane.figura.nombre}
-          </text>
-          <text
-            x={lane.x + lane.w - 10}
-            y={lane.y + 14}
-            fontSize={10}
-            fill="#475569"
-            textAnchor="end"
-          >
-            {lane.figura.num_piezas} piezas
-          </text>
-        </g>
-      ))}
+        );
+      })}
 
       {/* Aristas CONECTA_CON */}
       {showEdges &&
@@ -129,17 +151,21 @@ export function PuzzleSVG({
               stroke={isActive ? '#38bdf8' : '#334155'}
               strokeWidth={isActive ? 2.5 : 1.25}
               strokeLinecap="round"
-              opacity={isActive ? 1 : 0.7}
+              opacity={isActive ? 1 : 0.65}
             />
           );
         })}
 
-      {/* Aristas SIGUIENTE (líneas punteadas) */}
+      {/* Aristas SIGUIENTE (punteadas) */}
       {showEdges &&
         siguiente.map((s, i) => {
           const a = layout.boxes.get(s.from);
           const b = layout.boxes.get(s.to);
           if (!a || !b) return null;
+          const isActive =
+            activeEdge &&
+            ((activeEdge.from === s.from && activeEdge.to === s.to) ||
+              (activeEdge.from === s.to && activeEdge.to === s.from));
           return (
             <line
               key={`sig-${i}`}
@@ -147,10 +173,10 @@ export function PuzzleSVG({
               y1={a.y + a.h / 2}
               x2={b.x + b.w / 2}
               y2={b.y + b.h / 2}
-              stroke="#64748b"
-              strokeWidth={1}
+              stroke={isActive ? '#fbbf24' : '#64748b'}
+              strokeWidth={isActive ? 2.5 : 1}
               strokeDasharray="3 3"
-              opacity={0.5}
+              opacity={isActive ? 1 : 0.5}
             />
           );
         })}
@@ -160,46 +186,79 @@ export function PuzzleSVG({
         const box = layout.boxes.get(p.serial);
         if (!box) return null;
         const state: PieceVisualState = stateOf ? stateOf(p) : (p.presente ? 'idle' : 'missing');
-        const fill = TIPO_FILL[p.tipo] ?? '#94a3b8';
+        const fill = colorFor(p);
         const opacity = STATE_OPACITY[state];
         const isMissing = state === 'missing';
         const isActive = state === 'active';
         const isPlaced = state === 'placed';
+        const isStart = p.serial === startSerial;
+        const clickable =
+          interactive && (clickableMissing || !isMissing) && onPieceClick != null;
+
+        const shapeD = isGrid
+          ? jigsawPath(box.w, box.h, {
+              arriba: p.lado_arriba ?? null,
+              derecha: p.lado_derecha ?? null,
+              abajo: p.lado_abajo ?? null,
+              izquierda: p.lado_izquierda ?? null,
+            })
+          : null;
+
+        const shapeProps = {
+          fill,
+          fillOpacity: isMissing ? 0.1 : isPlaced ? 0.45 : 0.25,
+          opacity,
+          stroke: isActive
+            ? '#fde047'
+            : isStart
+            ? '#fde047'
+            : isMissing
+            ? fill
+            : isPlaced
+            ? fill
+            : hexAlpha(fill, 0.7),
+          strokeWidth: isActive ? 3 : isStart ? 2.5 : 1.5,
+          strokeDasharray: isMissing ? '4 3' : undefined,
+          filter: isActive || isStart ? 'url(#glow)' : undefined,
+        } as const;
 
         return (
           <g
             key={p.serial}
             transform={`translate(${box.x},${box.y})`}
-            className={interactive ? 'cursor-pointer' : ''}
-            onClick={interactive ? () => onPieceClick?.(p) : undefined}
+            className={clickable ? 'cursor-pointer' : ''}
+            style={interactive && isMissing && !clickableMissing ? { cursor: 'not-allowed' } : undefined}
+            onClick={clickable ? () => onPieceClick?.(p) : undefined}
           >
-            <rect
-              width={box.w}
-              height={box.h}
-              rx={8}
-              fill={fill}
-              fillOpacity={isMissing ? 0.08 : isPlaced ? 0.35 : 0.18}
-              opacity={opacity}
-              stroke={isActive ? '#fde047' : isMissing ? fill : isPlaced ? fill : '#475569'}
-              strokeWidth={isActive ? 3 : 1.5}
-              strokeDasharray={isMissing ? '4 3' : undefined}
-              filter={isActive ? 'url(#glow)' : undefined}
-            />
-            {isMissing && (
-              <rect
-                width={box.w}
-                height={box.h}
-                rx={8}
-                fill="url(#hatch)"
-                opacity={0.5}
-                pointerEvents="none"
-              />
+            {shapeD ? (
+              <path d={shapeD} {...shapeProps} />
+            ) : (
+              <rect width={box.w} height={box.h} rx={8} {...shapeProps} />
             )}
+            {isMissing &&
+              (shapeD ? (
+                <path
+                  d={shapeD}
+                  fill="url(#hatch)"
+                  opacity={0.5}
+                  pointerEvents="none"
+                />
+              ) : (
+                <rect
+                  width={box.w}
+                  height={box.h}
+                  rx={8}
+                  fill="url(#hatch)"
+                  opacity={0.5}
+                  pointerEvents="none"
+                />
+              ))}
             <text
               x={box.w / 2}
-              y={box.h / 2 - 2}
+              y={box.sublabel ? box.h / 2 - 5 : box.h / 2}
               textAnchor="middle"
-              fontSize={11}
+              dominantBaseline="middle"
+              fontSize={10}
               fontWeight={600}
               fill={isMissing ? '#94a3b8' : '#f8fafc'}
               opacity={opacity}
@@ -207,20 +266,40 @@ export function PuzzleSVG({
             >
               {box.label}
             </text>
-            <text
-              x={box.w / 2}
-              y={box.h / 2 + 12}
-              textAnchor="middle"
-              fontSize={8}
-              fill={isMissing ? '#64748b' : '#e2e8f0'}
-              opacity={opacity * 0.8}
-              pointerEvents="none"
-            >
-              {p.tipo}
-            </text>
+            {box.sublabel && (
+              <text
+                x={box.w / 2}
+                y={box.h / 2 + 8}
+                textAnchor="middle"
+                dominantBaseline="middle"
+                fontSize={8}
+                fill={isMissing ? '#64748b' : '#cbd5e1'}
+                opacity={opacity * 0.85}
+                pointerEvents="none"
+              >
+                {box.sublabel}
+              </text>
+            )}
+            {isStart && (
+              <g pointerEvents="none">
+                <circle cx={box.w / 2} cy={-10} r={7} fill="#fde047" />
+                <text
+                  x={box.w / 2}
+                  y={-7}
+                  textAnchor="middle"
+                  fontSize={9}
+                  fontWeight={700}
+                  fill="#0b1120"
+                >
+                  ▶
+                </text>
+              </g>
+            )}
           </g>
         );
       })}
     </svg>
   );
 }
+
+export { FIGURA_PALETTE };

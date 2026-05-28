@@ -11,7 +11,7 @@ import type {
 import { AssemblyMode } from './AssemblyMode';
 import { CypherLog } from './CypherLog';
 import { MissingMode } from './MissingMode';
-import { PuzzleSVG, type PieceVisualState } from './PuzzleSVG';
+import { FIGURA_PALETTE, PuzzleSVG, type PieceVisualState } from './PuzzleSVG';
 
 type Mode = 'view' | 'assemble' | 'missing';
 
@@ -29,6 +29,9 @@ export function PuzzleView({ puzzle, onBack }: Props) {
   const [loadingAssembly, setLoadingAssembly] = useState(false);
   const [loadingReport, setLoadingReport] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  // null = pieza inicial automática.
+  const [startSerial, setStartSerial] = useState<string | null>(null);
 
   const [placed, setPlaced] = useState<Set<string>>(new Set());
   const [activeEdge, setActiveEdge] = useState<{ from: string; to: string } | null>(null);
@@ -48,85 +51,101 @@ export function PuzzleView({ puzzle, onBack }: Props) {
     }
   }, [puzzle.serial, track]);
 
-  const loadAssembly = useCallback(async () => {
-    setLoadingAssembly(true);
-    try {
-      const r = await track(`Armado completo ${puzzle.serial}`, () =>
-        api.assemble(puzzle.serial)
-      );
-      setAssembly(r);
-    } catch (e) {
-      setError((e as Error).message);
-    } finally {
-      setLoadingAssembly(false);
-    }
-  }, [puzzle.serial, track]);
+  const loadAssembly = useCallback(
+    async (start: string | null) => {
+      setLoadingAssembly(true);
+      try {
+        const label = start ? `Armar desde ${start}` : `Armar ${puzzle.serial} (auto)`;
+        const r = await track(label, () => api.assemble(puzzle.serial, start));
+        setAssembly(r);
+        setPlaced(new Set());
+        setActiveEdge(null);
+      } catch (e) {
+        setError((e as Error).message);
+      } finally {
+        setLoadingAssembly(false);
+      }
+    },
+    [puzzle.serial, track]
+  );
 
-  const loadReport = useCallback(async () => {
-    setLoadingReport(true);
-    try {
-      const r = await track(`Reporte de faltantes ${puzzle.serial}`, () =>
-        api.report(puzzle.serial)
-      );
-      setReport(r);
-    } catch (e) {
-      setError((e as Error).message);
-    } finally {
-      setLoadingReport(false);
-    }
-  }, [puzzle.serial, track]);
+  const loadReport = useCallback(
+    async (start: string | null) => {
+      setLoadingReport(true);
+      try {
+        const r = await track(`Reporte de faltantes ${puzzle.serial}`, () =>
+          api.report(puzzle.serial, start)
+        );
+        setReport(r);
+      } catch (e) {
+        setError((e as Error).message);
+      } finally {
+        setLoadingReport(false);
+      }
+    },
+    [puzzle.serial, track]
+  );
 
   useEffect(() => {
     loadDetail();
   }, [loadDetail]);
 
   useEffect(() => {
-    if (mode === 'assemble' && !assembly) loadAssembly();
-    if (mode === 'missing' && !report) loadReport();
-    if (mode !== 'assemble') {
+    if (mode === 'assemble') loadAssembly(startSerial);
+    else {
       setPlaced(new Set());
       setActiveEdge(null);
     }
-  }, [mode, assembly, report, loadAssembly, loadReport]);
+  }, [mode, startSerial, loadAssembly]);
+
+  useEffect(() => {
+    if (mode === 'missing' && !report) loadReport(startSerial);
+  }, [mode, report, startSerial, loadReport]);
 
   const onPieceClick = useCallback(
     async (p: Pieza) => {
-      if (mode !== 'missing') return;
-      try {
-        await track(`Toggle ${p.serial}`, () => api.togglePiece(p.serial));
-        // Actualizar localmente el flag presente para feedback inmediato.
-        setDetail(prev =>
-          prev
-            ? {
-                ...prev,
-                piezas: prev.piezas.map(pz =>
-                  pz.serial === p.serial ? { ...pz, presente: !pz.presente } : pz
-                ),
-              }
-            : prev
-        );
-        loadReport();
-      } catch (e) {
-        setError((e as Error).message);
+      if (mode === 'assemble') {
+        if (!p.presente) return; // no se puede iniciar desde una pieza faltante
+        setStartSerial(p.serial);
+        return;
+      }
+      if (mode === 'missing') {
+        try {
+          await track(`Toggle ${p.serial}`, () => api.togglePiece(p.serial));
+          setDetail(prev =>
+            prev
+              ? {
+                  ...prev,
+                  piezas: prev.piezas.map(pz =>
+                    pz.serial === p.serial ? { ...pz, presente: !pz.presente } : pz
+                  ),
+                }
+              : prev
+          );
+          loadReport(startSerial);
+          setAssembly(null);
+        } catch (e) {
+          setError((e as Error).message);
+        }
       }
     },
-    [mode, track, loadReport]
+    [mode, track, loadReport, startSerial]
   );
 
   const onRestoreAll = useCallback(async () => {
     try {
       await track(`Restaurar ${puzzle.serial}`, () => api.restoreAll(puzzle.serial));
-      // Marcar todas como presentes localmente.
       setDetail(prev =>
         prev
           ? { ...prev, piezas: prev.piezas.map(pz => ({ ...pz, presente: true })) }
           : prev
       );
-      loadReport();
+      loadReport(startSerial);
+      setAssembly(null);
     } catch (e) {
       setError((e as Error).message);
     }
-  }, [puzzle.serial, track, loadReport]);
+  }, [puzzle.serial, track, loadReport, startSerial]);
 
   const stateOf = useCallback(
     (p: Pieza): PieceVisualState => {
@@ -186,8 +205,10 @@ export function PuzzleView({ puzzle, onBack }: Props) {
                   siguiente={detail.siguiente}
                   stateOf={stateOf}
                   activeEdge={mode === 'assemble' ? activeEdge : null}
+                  startSerial={mode === 'assemble' ? startSerial : null}
                   onPieceClick={onPieceClick}
-                  interactive={mode === 'missing'}
+                  interactive={mode === 'missing' || mode === 'assemble'}
+                  clickableMissing={mode === 'missing'}
                 />
               )}
               {!detail && loadingDetail && (
@@ -196,18 +217,20 @@ export function PuzzleView({ puzzle, onBack }: Props) {
                 </div>
               )}
             </div>
-            <Legend />
+            <Legend figuras={detail?.figuras ?? []} />
           </div>
 
           {mode === 'assemble' && (
             <AssemblyMode
               pasos={assembly?.pasos ?? []}
               loading={loadingAssembly}
+              startSerial={startSerial}
+              onClearStart={() => setStartSerial(null)}
               onStateChange={({ placed, activeEdge }) => {
                 setPlaced(placed);
                 setActiveEdge(activeEdge);
               }}
-              onReload={loadAssembly}
+              onReload={() => loadAssembly(startSerial)}
             />
           )}
 
@@ -253,20 +276,29 @@ function ModeTabs({ current, onChange }: { current: Mode; onChange: (m: Mode) =>
   );
 }
 
-function Legend() {
-  const items = [
-    { color: '#f59e0b', label: 'esquina' },
-    { color: '#38bdf8', label: 'borde' },
-    { color: '#10b981', label: 'interior' },
-    { color: '#a78bfa', label: 'irregular' },
-  ];
+function Legend({ figuras }: { figuras: PuzzleDetailResponse['figuras'] }) {
+  const tieneFiguras = figuras.length > 0;
+
+  const items = tieneFiguras
+    ? [...figuras]
+        .sort((a, b) => (a.orden_narrativo ?? 0) - (b.orden_narrativo ?? 0))
+        .map((f, i) => ({
+          color: FIGURA_PALETTE[i % FIGURA_PALETTE.length],
+          label: `${f.nombre} (${f.num_piezas})`,
+        }))
+    : [
+        { color: '#f59e0b', label: 'esquina' },
+        { color: '#38bdf8', label: 'borde' },
+        { color: '#10b981', label: 'interior' },
+      ];
+
   return (
     <div className="mt-3 flex flex-wrap items-center gap-3 text-[10px] text-slate-400">
       {items.map(i => (
-        <div key={i.label} className="flex items-center gap-1">
+        <div key={i.label} className="flex items-center gap-1.5">
           <span
             className="inline-block h-2.5 w-2.5 rounded"
-            style={{ backgroundColor: i.color, opacity: 0.5 }}
+            style={{ backgroundColor: i.color, opacity: 0.65 }}
           />
           {i.label}
         </div>

@@ -5,8 +5,10 @@ import neo4j from 'neo4j-driver';
 import path from 'path';
 import { fileURLToPath } from 'url';
 
-import { assemblePuzzle } from '../database/scripts/bfs.js';
-import { getMissingReport } from '../database/scripts/armado_parcial.js';
+import {
+  assemblePuzzlePartial,
+  getMissingReport,
+} from '../database/scripts/armado_parcial.js';
 import {
   getStartingPiecesQuery,
   getNeighborsQuery,
@@ -17,6 +19,7 @@ import {
   getEstadoFigurasQuery,
   getEstadoPuzzleQuery,
   getComponenteQueryPuro,
+  getSiguienteBridgeQuery,
 } from '../database/scripts/queries_parcial.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
@@ -53,8 +56,8 @@ function asyncHandler(fn) {
   return (req, res, next) => Promise.resolve(fn(req, res, next)).catch(next);
 }
 
-// Convierte recursivamente Neo4j Integer -> Number para los scripts que abren
-// sus propios drivers sin disableLosslessIntegers.
+// Los scripts importados abren sus propios drivers sin disableLosslessIntegers,
+// así que normalizamos Neo4j Integer -> Number antes de responder JSON.
 function serialize(value) {
   if (value === null || value === undefined) return value;
   if (neo4j.isInt(value)) return value.toNumber();
@@ -77,7 +80,6 @@ app.get('/api/health', (req, res) => {
   res.json({ ok: true });
 });
 
-// Listado de rompecabezas.
 app.get('/api/puzzles', asyncHandler(async (req, res) => {
   const records = await runQuery(`
     MATCH (r:Rompecabezas)
@@ -93,7 +95,6 @@ app.get('/api/puzzles', asyncHandler(async (req, res) => {
   });
 }));
 
-// Detalle completo de un rompecabezas.
 app.get('/api/puzzles/:id', asyncHandler(async (req, res) => {
   const puzzleId = req.params.id.toUpperCase();
 
@@ -160,30 +161,38 @@ app.get('/api/puzzles/:id', asyncHandler(async (req, res) => {
   });
 }));
 
-// Armado completo.
+// Siempre usamos el BFS parcial: si no hay faltantes equivale al armado completo.
 app.get('/api/puzzles/:id/assemble', asyncHandler(async (req, res) => {
   const puzzleId = req.params.id.toUpperCase();
-  const pasos = await assemblePuzzle(puzzleId, auth);
+  const startSerial = req.query.start ? String(req.query.start).toUpperCase() : null;
+  const pasos = await assemblePuzzlePartial(puzzleId, auth, { startSerial });
   res.json({
     pasos,
+    startSerial,
     cypher_log: [
-      { label: 'Pieza inicial', query: getStartingPiecesQuery },
+      { label: 'Pieza inicial', query: getStartingPiecesQuery,
+        note: startSerial ? `Override con startSerial=${startSerial}` : undefined },
       { label: 'Vecinos (BFS)', query: getNeighborsQuery,
-        note: 'Se ejecuta una vez por pieza visitada' },
+        note: 'Una vez por pieza visitada, con presentOnly=true' },
+      { label: 'Puente SIGUIENTE', query: getSiguienteBridgeQuery,
+        note: 'Solo si faltantes aíslan piezas presentes' },
     ],
   });
 }));
 
-// Reporte de piezas faltantes + armado parcial.
 app.get('/api/puzzles/:id/report', asyncHandler(async (req, res) => {
   const puzzleId = req.params.id.toUpperCase();
-  const report = await getMissingReport(puzzleId, auth);
+  const startSerial = req.query.start ? String(req.query.start).toUpperCase() : null;
+  const report = await getMissingReport(puzzleId, auth, { startSerial });
   res.json({
     ...serialize(report),
+    startSerial,
     cypher_log: [
       { label: 'Pieza inicial (parcial)', query: getStartingPiecesPartialQuery },
       { label: 'Vecinos presentes',       query: getNeighborsQuery,
         note: 'Una vez por pieza visitada, con presentOnly=true' },
+      { label: 'Puente SIGUIENTE',        query: getSiguienteBridgeQuery,
+        note: 'Solo si faltantes aíslan piezas presentes' },
       { label: 'Inferencia de lados',     query: getInferenciaPiezasQuery },
       { label: 'Estado de figuras',       query: getEstadoFigurasQuery },
       { label: 'Estado del puzzle',       query: getEstadoPuzzleQuery },
@@ -193,7 +202,6 @@ app.get('/api/puzzles/:id/report', asyncHandler(async (req, res) => {
   });
 }));
 
-// Toggle presente de una pieza (rúbrica 6).
 app.post('/api/pieces/:serial/toggle', asyncHandler(async (req, res) => {
   const serial = req.params.serial.toUpperCase();
   const records = await runQuery(`
@@ -216,7 +224,6 @@ app.post('/api/pieces/:serial/toggle', asyncHandler(async (req, res) => {
   });
 }));
 
-// Restaurar todas las piezas faltantes de un rompecabezas.
 app.post('/api/puzzles/:id/restore', asyncHandler(async (req, res) => {
   const puzzleId = req.params.id.toUpperCase();
   const records = await runQuery(`

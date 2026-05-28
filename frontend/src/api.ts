@@ -24,11 +24,19 @@ async function request<T>(path: string, init?: RequestInit): Promise<T> {
   return res.json() as Promise<T>;
 }
 
+function withStart(path: string, startSerial?: string | null): string {
+  if (!startSerial) return path;
+  const sep = path.includes('?') ? '&' : '?';
+  return `${path}${sep}start=${encodeURIComponent(startSerial)}`;
+}
+
 export const api = {
   listPuzzles: () => request<PuzzleListResponse>('/puzzles'),
   getPuzzle: (id: string) => request<PuzzleDetailResponse>(`/puzzles/${id}`),
-  assemble: (id: string) => request<AssembleResponse>(`/puzzles/${id}/assemble`),
-  report: (id: string) => request<MissingReportResponse>(`/puzzles/${id}/report`),
+  assemble: (id: string, startSerial?: string | null) =>
+    request<AssembleResponse>(withStart(`/puzzles/${id}/assemble`, startSerial)),
+  report: (id: string, startSerial?: string | null) =>
+    request<MissingReportResponse>(withStart(`/puzzles/${id}/report`, startSerial)),
   togglePiece: (serial: string) =>
     request<ToggleResponse>(`/pieces/${serial}/toggle`, { method: 'POST' }),
   restoreAll: (id: string) =>

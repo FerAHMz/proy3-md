@@ -138,3 +138,23 @@ export const getComponenteQueryPuro = `
   WHERE ALL(nodo IN nodes(path) WHERE nodo.presente = true)
   RETURN collect(DISTINCT p.serial) AS componente
 `;
+
+// Puente SIGUIENTE para rescatar piezas presentes aisladas cuando faltantes
+// rompen la conectividad física. La cadena puede atravesar piezas faltantes
+// como intermedias (ALL ... presente = false), efectivamente saltándolas.
+// Devuelve el puente más corto disponible.
+export const getSiguienteBridgeQuery = `
+  MATCH (visitada:Pieza {presente: true})
+  WHERE visitada.rompecabezas_serial = $puzzleId
+    AND visitada.serial IN $visitedArr
+  MATCH path = (visitada)-[:SIGUIENTE*1..15]-(pendiente:Pieza {presente: true})
+  WHERE pendiente.rompecabezas_serial = $puzzleId
+    AND NOT pendiente.serial IN $visitedArr
+    AND ALL(n IN nodes(path)[1..-1] WHERE n.presente = false)
+  RETURN visitada.serial AS desde,
+         pendiente.serial AS hacia,
+         length(path) AS hops,
+         [n IN nodes(path)[1..-1] | n.serial] AS faltantesIntermedias
+  ORDER BY hops
+  LIMIT 1
+`;

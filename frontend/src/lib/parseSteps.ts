@@ -2,13 +2,14 @@ export type ParsedStep =
   | { kind: 'header'; text: string }
   | { kind: 'figura'; figura: string }
   | { kind: 'start'; piece: string }
-  | { kind: 'connect'; from: string; to: string; lado?: string; kindRel: 'CONECTA_CON' | 'SIGUIENTE' | 'ENSAMBLE' }
+  | { kind: 'connect'; from: string; to: string; lado?: string; kindRel: 'CONECTA_CON' | 'SIGUIENTE' | 'ENSAMBLE' | 'BRIDGE_SIGUIENTE'; saltadas?: string[] }
   | { kind: 'text'; text: string };
 
 const RE_START   = /^Colocando primera pieza: (\S+)$/;
 const RE_CONN    = /^pieza (\S+) se ensambla con (\S+) por el lado (\S+)$/;
 const RE_ENSAM   = /^pieza (\S+) se ensambla con (\S+) por ensamblaje$/;
 const RE_SIG     = /^pieza (\S+) se ensambla con la siguiente pieza de la secuencia: (\S+)$/;
+const RE_BRIDGE  = /^pieza (\S+) → (\S+) por orden numérico \(sin contacto físico(?:, saltando faltantes ([^)]+))?\)$/;
 const RE_FIG     = /^Armando figura: (.+)$/;
 
 export function parseStep(raw: string): ParsedStep {
@@ -30,6 +31,12 @@ export function parseStep(raw: string): ParsedStep {
 
   m = RE_SIG.exec(line);
   if (m) return { kind: 'connect', from: m[1], to: m[2], kindRel: 'SIGUIENTE' };
+
+  m = RE_BRIDGE.exec(line);
+  if (m) {
+    const saltadas = m[3] ? m[3].split(', ').filter(Boolean) : undefined;
+    return { kind: 'connect', from: m[1], to: m[2], kindRel: 'BRIDGE_SIGUIENTE', saltadas };
+  }
 
   return { kind: 'text', text: line };
 }

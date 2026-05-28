@@ -8,6 +8,7 @@ import {
   getComponenteQueryPuro,
   getEstadoFigurasQuery,
   getEstadoPuzzleQuery,
+  getSiguienteBridgeQuery,
 } from './queries_parcial.js';
 
 // ─── helpers de sesión ───────────────────────────────────────────────────────
@@ -18,73 +19,158 @@ function openDriver(auth) {
 
 // ─── BFS parcial ─────────────────────────────────────────────────────────────
 
-/**
- * Arma el rompecabezas omitiendo las piezas con presente=false.
- * Devuelve un array de strings con los pasos de armado (compatible con assemblePuzzle).
- *
- * @param {string} puzzleId  - Ej: 'RC001'
- * @param {object} auth      - { uri, user, password }
- */
-export async function assemblePuzzlePartial(puzzleId, auth) {
+// La pieza inicial del usuario debe estar presente.
+const USER_START_PIECE_PARTIAL_QUERY = `
+  MATCH (p:Pieza {serial: $startSerial, presente: true})-[:PERTENECE_A]->(r:Rompecabezas {serial: $puzzleId})
+  OPTIONAL MATCH (p)-[:PARTE_DE]->(f:Figura)
+  RETURN
+    p { .*, id: p.serial, etiqueta: labels(p)[0] } AS node,
+    CASE WHEN f IS NOT NULL THEN f { .*, id: f.serial, etiqueta: labels(f)[0] } ELSE null END AS figura,
+    r.tipo_estructura AS tipo_estructura
+`;
+
+const OTHER_FIGURAS_START_PARTIAL_QUERY = `
+  MATCH (f:Figura)-[:EN]->(r:Rompecabezas {serial: $puzzleId})
+  WHERE f.serial <> $userFigSerial
+  OPTIONAL MATCH (p:Pieza)-[:PARTE_DE]->(f)
+  WHERE p.presente = true
+  WITH f, p
+  ORDER BY coalesce(f.orden_narrativo, 0) ASC, p.numero ASC, p.fila ASC, p.columna ASC, p.serial ASC
+  WITH f, collect(p)[0] AS primeraPieza
+  WHERE primeraPieza IS NOT NULL
+  RETURN
+    primeraPieza { .*, id: primeraPieza.serial, etiqueta: labels(primeraPieza)[0] } AS node,
+    f { .*, id: f.serial, etiqueta: labels(f)[0] } AS figura
+  ORDER BY coalesce(f.orden_narrativo, 0)
+`;
+
+async function fetchStartingPiecesPartial(session, puzzleId, startSerial) {
+  if (!startSerial) {
+    const result = await session.run(getStartingPiecesPartialQuery, { puzzleId });
+    return result.records.map(rec => ({
+      node: rec.get('node'),
+      figura: rec.get('figura'),
+      tipo_estructura: rec.get('tipo_estructura'),
+    }));
+  }
+
+  const userResult = await session.run(USER_START_PIECE_PARTIAL_QUERY, { puzzleId, startSerial });
+  if (userResult.records.length === 0) {
+    throw new Error(
+      `Pieza ${startSerial} no pertenece a ${puzzleId} o está marcada como faltante.`
+    );
+  }
+
+  const userNode = userResult.records[0].get('node');
+  const userFigura = userResult.records[0].get('figura');
+  const tipo_estructura = userResult.records[0].get('tipo_estructura');
+
+  const out = [{ node: userNode, figura: userFigura, tipo_estructura }];
+
+  if (userFigura) {
+    const otrasResult = await session.run(OTHER_FIGURAS_START_PARTIAL_QUERY, {
+      puzzleId,
+      userFigSerial: userFigura.serial,
+    });
+    for (const rec of otrasResult.records) {
+      out.push({
+        node: rec.get('node'),
+        figura: rec.get('figura'),
+        tipo_estructura,
+      });
+    }
+  }
+
+  return out;
+}
+
+async function bfsCONECTA_CON(session, startId, visited, outputs) {
+  const queue = [startId];
+  visited.add(startId);
+
+  while (queue.length > 0) {
+    const currentId = queue.shift();
+    const neighborResult = await session.run(getNeighborsQuery, {
+      pieceId: currentId,
+      presentOnly: true,
+    });
+
+    for (const rec of neighborResult.records) {
+      const neighbor = rec.get('node');
+      if (visited.has(neighbor.id)) continue;
+      visited.add(neighbor.id);
+      queue.push(neighbor.id);
+
+      const lado = rec.get('lado');
+      const soyOrigen = rec.get('soy_origen');
+      const ladoConexion = soyOrigen ? lado : invertLado(lado);
+      const ladoText = ladoConexion ? `por el lado ${ladoConexion}` : 'por ensamblaje';
+      outputs.push(`pieza ${currentId} se ensambla con ${neighbor.id} ${ladoText}`);
+    }
+  }
+}
+
+// BFS que omite piezas con presente=false. Devuelve los pasos como strings.
+export async function assemblePuzzlePartial(puzzleId, auth, options = {}) {
+  const { startSerial = null } = options;
   const driver = openDriver(auth);
   const session = driver.session();
   const outputs = [];
 
   try {
-    const resultStart = await session.run(getStartingPiecesPartialQuery, { puzzleId });
+    const startingPieces = await fetchStartingPiecesPartial(session, puzzleId, startSerial);
 
-    if (resultStart.records.length === 0) {
+    if (startingPieces.length === 0) {
       return [`Rompecabezas ${puzzleId}: sin piezas presentes para armar.`];
     }
 
-    const structureType = resultStart.records[0].get('tipo_estructura');
-    outputs.push(`--- Armado parcial de ${puzzleId} (${structureType}) ---`);
+    const structureType = startingPieces[0].tipo_estructura;
+
+    const faltantesResult = await session.run(
+      'MATCH (p:Pieza {rompecabezas_serial: $puzzleId, presente: false}) RETURN count(p) AS n',
+      { puzzleId }
+    );
+    const nRaw = faltantesResult.records[0].get('n');
+    const numFaltantes = typeof nRaw === 'object' && nRaw.toNumber ? nRaw.toNumber() : nRaw;
+    const label = numFaltantes > 0 ? 'Armado parcial' : 'Armado';
+
+    outputs.push(`--- ${label} de ${puzzleId} (${structureType}) ---`);
 
     const visited = new Set();
 
-    for (const record of resultStart.records) {
-      const startNode = record.get('node');
-      const fig = record.get('figura');
+    for (const { node: startNode, figura: fig } of startingPieces) {
+      // Salta figuras alcanzadas vía CONECTA_CON desde una figura anterior.
+      if (visited.has(startNode.id)) continue;
 
       if (fig) {
         outputs.push(`\nArmando figura: ${fig.nombre}`);
       }
 
-      const queue = [startNode.id];
-      visited.add(startNode.id);
       outputs.push(`Colocando primera pieza: ${startNode.id}`);
-
-      while (queue.length > 0) {
-        const currentId = queue.shift();
-
-        const neighborResult = await session.run(getNeighborsQuery, {
-          pieceId: currentId,
-          presentOnly: true,
-        });
-
-        for (const neighborRecord of neighborResult.records) {
-          const neighbor = neighborRecord.get('node');
-          const tipoRel = neighborRecord.get('tipoRel');
-          const lado = neighborRecord.get('lado');
-          const soyOrigen = neighborRecord.get('soy_origen');
-
-          if (!visited.has(neighbor.id)) {
-            visited.add(neighbor.id);
-            queue.push(neighbor.id);
-
-            if (tipoRel === 'CONECTA_CON') {
-              const ladoConexion = soyOrigen ? lado : invertLado(lado);
-              const ladoText = ladoConexion ? `por el lado ${ladoConexion}` : `por ensamblaje`;
-              outputs.push(`pieza ${currentId} se ensambla con ${neighbor.id} ${ladoText}`);
-            } else if (tipoRel === 'SIGUIENTE') {
-              outputs.push(`pieza ${currentId} se ensambla con la siguiente pieza de la secuencia: ${neighbor.id}`);
-            }
-          }
-        }
-      }
+      await bfsCONECTA_CON(session, startNode.id, visited, outputs);
     }
 
-    outputs.push(`\n--- Armado parcial de ${puzzleId} finalizado (${visited.size} piezas) ---`);
+    // Fallback SIGUIENTE: si faltantes dejaron piezas presentes inalcanzables,
+    // puentea por orden numérico y reanuda BFS por CONECTA_CON.
+    while (true) {
+      const bridgeResult = await session.run(getSiguienteBridgeQuery, {
+        puzzleId,
+        visitedArr: [...visited],
+      });
+      if (bridgeResult.records.length === 0) break;
+
+      const rec = bridgeResult.records[0];
+      const desde = rec.get('desde');
+      const hacia = rec.get('hacia');
+      const intermedias = rec.get('faltantesIntermedias') ?? [];
+      const salto = intermedias.length > 0
+        ? `, saltando faltantes ${intermedias.join(', ')}`
+        : '';
+      outputs.push(`pieza ${desde} → ${hacia} por orden numérico (sin contacto físico${salto})`);
+      await bfsCONECTA_CON(session, hacia, visited, outputs);
+    }
+
+    outputs.push(`\n--- ${label} de ${puzzleId} finalizado (${visited.size} piezas) ---`);
     return outputs;
 
   } finally {
@@ -251,11 +337,12 @@ export async function getFigurasStatus(puzzleId, auth) {
  *   armado_parcial: string[]
  * }}
  */
-export async function getMissingReport(puzzleId, auth) {
+export async function getMissingReport(puzzleId, auth, options = {}) {
+  const { startSerial = null } = options;
   const [faltantes, regiones_aisladas, armado_parcial, estado_figuras] = await Promise.all([
     inferMissingPieces(puzzleId, auth),
     detectIsolatedRegions(puzzleId, auth),
-    assemblePuzzlePartial(puzzleId, auth),
+    assemblePuzzlePartial(puzzleId, auth, { startSerial }),
     getFigurasStatus(puzzleId, auth),
   ]);
 

@@ -4,6 +4,8 @@ import { parseStep, placedAfter, type ParsedStep } from '../lib/parseSteps';
 interface Props {
   pasos: string[];
   loading: boolean;
+  startSerial: string | null;
+  onClearStart: () => void;
   onStateChange: (state: { placed: Set<string>; activeEdge: { from: string; to: string } | null }) => void;
   onReload: () => void;
 }
@@ -15,7 +17,14 @@ const SPEEDS = [
   { label: '4×',   ms: 200  },
 ];
 
-export function AssemblyMode({ pasos, loading, onStateChange, onReload }: Props) {
+export function AssemblyMode({
+  pasos,
+  loading,
+  startSerial,
+  onClearStart,
+  onStateChange,
+  onReload,
+}: Props) {
   const [idx, setIdx] = useState(-1);
   const [playing, setPlaying] = useState(false);
   const [speedIdx, setSpeedIdx] = useState(1);
@@ -24,7 +33,6 @@ export function AssemblyMode({ pasos, loading, onStateChange, onReload }: Props)
   const parsed = useMemo<ParsedStep[]>(() => pasos.map(parseStep), [pasos]);
   const total = pasos.length;
 
-  // Avanza al siguiente paso utilizable o se detiene al final.
   useEffect(() => {
     if (!playing) return;
     if (idx >= total - 1) {
@@ -39,7 +47,6 @@ export function AssemblyMode({ pasos, loading, onStateChange, onReload }: Props)
     };
   }, [playing, idx, total, speedIdx]);
 
-  // Notifica al renderer cuáles piezas están colocadas y cuál arista es la "activa".
   useEffect(() => {
     if (idx < 0) {
       onStateChange({ placed: new Set(), activeEdge: null });
@@ -76,7 +83,7 @@ export function AssemblyMode({ pasos, loading, onStateChange, onReload }: Props)
         <div>
           <h2 className="text-sm font-semibold text-slate-200">Armar paso a paso</h2>
           <p className="text-xs text-slate-500">
-            BFS desde la primera pieza · {total} pasos
+            BFS · {total} pasos · respeta piezas marcadas como faltantes
           </p>
         </div>
         <button
@@ -87,7 +94,33 @@ export function AssemblyMode({ pasos, loading, onStateChange, onReload }: Props)
         </button>
       </div>
 
-      {/* Controles */}
+      <div className="rounded-lg border border-slate-800 bg-slate-950/50 px-3 py-2">
+        <div className="flex items-center justify-between gap-2">
+          <div className="flex items-center gap-2 text-xs">
+            <span className="text-slate-500">Inicio:</span>
+            {startSerial ? (
+              <>
+                <span className="inline-flex items-center gap-1 rounded bg-amber-500/15 px-2 py-0.5 font-mono text-amber-200 ring-1 ring-amber-500/30">
+                  <span aria-hidden>▶</span>
+                  {startSerial}
+                </span>
+                <button
+                  onClick={onClearStart}
+                  className="text-[10px] text-slate-500 underline-offset-2 hover:text-slate-300 hover:underline"
+                >
+                  usar automático
+                </button>
+              </>
+            ) : (
+              <span className="text-slate-400">automático (primera pieza determinística)</span>
+            )}
+          </div>
+        </div>
+        <p className="mt-1 text-[10px] text-slate-500">
+          Click sobre cualquier pieza presente en el SVG para elegir desde dónde se arma.
+        </p>
+      </div>
+
       <div className="flex flex-wrap items-center gap-2">
         <button
           onClick={() => {
@@ -138,7 +171,6 @@ export function AssemblyMode({ pasos, loading, onStateChange, onReload }: Props)
         </div>
       </div>
 
-      {/* Progreso */}
       <div className="h-1 overflow-hidden rounded-full bg-slate-800">
         <div
           className="h-full bg-sky-500 transition-[width] duration-200"
@@ -149,7 +181,6 @@ export function AssemblyMode({ pasos, loading, onStateChange, onReload }: Props)
         Paso {Math.max(0, idx + 1)} / {total}
       </div>
 
-      {/* Paso actual */}
       <div className="rounded-lg border border-slate-800 bg-slate-950/60 p-3">
         {current ? (
           <StepLine step={current} />
@@ -160,7 +191,6 @@ export function AssemblyMode({ pasos, loading, onStateChange, onReload }: Props)
         )}
       </div>
 
-      {/* Lista completa colapsada (últimos 8 pasos visibles) */}
       <details className="rounded-lg border border-slate-800 bg-slate-950/40">
         <summary className="cursor-pointer px-3 py-2 text-xs text-slate-400 hover:text-slate-200">
           Ver lista completa de pasos
@@ -202,6 +232,19 @@ function StepLine({ step }: { step: ParsedStep }) {
       </div>
     );
   if (step.kind === 'connect') {
+    if (step.kindRel === 'BRIDGE_SIGUIENTE') {
+      const salta = step.saltadas?.length
+        ? `, saltando ${step.saltadas.join(', ')}`
+        : '';
+      return (
+        <div className="text-xs text-amber-200">
+          <code className="font-mono text-amber-300">{step.from}</code>{' '}
+          <span className="text-amber-400">→</span>{' '}
+          <code className="font-mono text-amber-300">{step.to}</code>{' '}
+          <span className="text-amber-400/80">por orden numérico (sin contacto físico{salta})</span>
+        </div>
+      );
+    }
     const detail =
       step.kindRel === 'SIGUIENTE'
         ? 'siguiente en la secuencia'

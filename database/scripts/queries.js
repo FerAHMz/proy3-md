@@ -42,10 +42,10 @@ export const getStartingPiecesQuery = `
   ORDER BY coalesce(figura.orden_narrativo, 0) ASC
 `;
 
-// Query de vecinos: obtiene las piezas conectadas físicamente (CONECTA_CON)
-// o lógicamente (SIGUIENTE). Pasar $presentOnly = true para omitir piezas faltantes.
+// Solo sigue CONECTA_CON. SIGUIENTE es orden narrativo (no adyacencia física)
+// y si se incluye el BFS reporta uniones entre piezas que no se tocan.
 export const getNeighborsQuery = `
-  MATCH (p:Pieza {serial: $pieceId})-[rel:CONECTA_CON|SIGUIENTE]-(vecino:Pieza)
+  MATCH (p:Pieza {serial: $pieceId})-[rel:CONECTA_CON]-(vecino:Pieza)
   WHERE ($presentOnly = false) OR (vecino.presente = true)
   RETURN
       vecino { .*, id: vecino.serial, etiqueta: labels(vecino)[0] } as node,
