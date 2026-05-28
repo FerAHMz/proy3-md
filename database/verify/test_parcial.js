@@ -56,7 +56,7 @@ async function setFaltantes(driver, ids) {
   const session = driver.session();
   try {
     await session.run(
-      'MATCH (p:Pieza) WHERE p.id IN $ids SET p.presente = false',
+      'MATCH (p:Pieza) WHERE p.serial IN $ids SET p.presente = false',
       { ids }
     );
   } finally {

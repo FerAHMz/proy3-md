@@ -5,7 +5,7 @@
 
 // Variante de getStartingPiecesQuery que sólo considera piezas con presente=true como nodo inicial.
 export const getStartingPiecesPartialQuery = `
-  MATCH (r:Rompecabezas {id: $puzzleId})
+  MATCH (r:Rompecabezas {serial: $puzzleId})
   OPTIONAL MATCH (f:Figura)-[:EN]->(r)
   WITH r, collect(f) as figuras
 
@@ -15,7 +15,7 @@ export const getStartingPiecesPartialQuery = `
       OPTIONAL MATCH (p:Pieza)-[:PARTE_DE]->(fig)
       WHERE p.presente = true
       WITH r, fig, p
-      ORDER BY coalesce(fig.orden_narrativo, 0) ASC, p.numero ASC, p.fila ASC, p.columna ASC, p.id ASC
+      ORDER BY coalesce(fig.orden_narrativo, 0) ASC, p.numero ASC, p.fila ASC, p.columna ASC, p.serial ASC
       WITH fig, collect(p)[0] as primeraPiezaFigura
       WHERE primeraPiezaFigura IS NOT NULL
       RETURN primeraPiezaFigura as startNode, fig
@@ -26,13 +26,13 @@ export const getStartingPiecesPartialQuery = `
       MATCH (p:Pieza)-[:PERTENECE_A]->(r)
       WHERE p.presente = true
       WITH p
-      ORDER BY p.numero ASC, p.fila ASC, p.columna ASC, p.id ASC LIMIT 1
+      ORDER BY p.numero ASC, p.fila ASC, p.columna ASC, p.serial ASC LIMIT 1
       RETURN p as startNode, null as fig
   }
 
   RETURN
-    startNode { .*, id: startNode.id, etiqueta: labels(startNode)[0] } as node,
-    CASE WHEN fig IS NOT NULL THEN fig { .*, id: fig.id, etiqueta: labels(fig)[0] } ELSE null END as figura,
+    startNode { .*, id: startNode.serial, etiqueta: labels(startNode)[0] } as node,
+    CASE WHEN fig IS NOT NULL THEN fig { .*, id: fig.serial, etiqueta: labels(fig)[0] } ELSE null END as figura,
     r.tipo_estructura as tipo_estructura
   ORDER BY coalesce(figura.orden_narrativo, 0) ASC
 `;
@@ -42,12 +42,12 @@ export const getStartingPiecesPartialQuery = `
 // La función JS debe aplicar invertEncaje(encaje_vecino_hacia_falta) para obtener
 // el lado inferido de la faltante en la dirección dir_desde_falta.
 export const getInferenciaPiezasQuery = `
-  MATCH (falta:Pieza {presente: false, rompecabezas_id: $puzzleId})
+  MATCH (falta:Pieza {presente: false, rompecabezas_serial: $puzzleId})
   OPTIONAL MATCH (falta)-[c:CONECTA_CON]-(vecino:Pieza {presente: true})
   WITH falta, collect(
     CASE WHEN vecino IS NULL THEN null
     ELSE {
-      vecino_id: vecino.id,
+      vecino_id: vecino.serial,
       dir_desde_falta: CASE
         WHEN startNode(c) = falta THEN c.lado
         ELSE CASE c.lado
@@ -77,9 +77,9 @@ export const getInferenciaPiezasQuery = `
     END
   ) AS conexiones_raw
   RETURN
-    falta.id              AS faltante_id,
-    falta.rompecabezas_id AS rompecabezas,
-    falta.descripcion     AS descripcion,
+    falta.serial              AS faltante_id,
+    falta.rompecabezas_serial AS rompecabezas,
+    falta.descripcion         AS descripcion,
     falta.fila            AS fila,
     falta.columna         AS columna,
     falta.numero          AS numero,
@@ -90,12 +90,12 @@ export const getInferenciaPiezasQuery = `
 // Estado de completitud por figura. Para puzzles con figuras devuelve una fila por figura;
 // para puzzles sin figuras (grids) no devuelve filas (usar getEstadoPuzzleQuery en ese caso).
 export const getEstadoFigurasQuery = `
-  MATCH (f:Figura)-[:EN]->(r:Rompecabezas {id: $puzzleId})
+  MATCH (f:Figura)-[:EN]->(r:Rompecabezas {serial: $puzzleId})
   OPTIONAL MATCH (p:Pieza)-[:PARTE_DE]->(f)
   WITH f,
        f.num_piezas AS esperadas,
        sum(CASE WHEN p.presente THEN 1 ELSE 0 END) AS presentes
-  RETURN f.id        AS id,
+  RETURN f.serial    AS id,
          f.nombre    AS nombre,
          esperadas,
          presentes,
@@ -106,12 +106,12 @@ export const getEstadoFigurasQuery = `
 
 // Estado de completitud a nivel de puzzle (fallback cuando no hay figuras, ej. grids).
 export const getEstadoPuzzleQuery = `
-  MATCH (r:Rompecabezas {id: $puzzleId})
+  MATCH (r:Rompecabezas {serial: $puzzleId})
   OPTIONAL MATCH (p:Pieza)-[:PERTENECE_A]->(r)
   WITH r,
        r.total_piezas AS esperadas,
        sum(CASE WHEN p.presente THEN 1 ELSE 0 END) AS presentes
-  RETURN r.id     AS id,
+  RETURN r.serial AS id,
          r.nombre AS nombre,
          esperadas,
          presentes,
@@ -122,19 +122,19 @@ export const getEstadoPuzzleQuery = `
 // Componente conexo que contiene la pieza $seedId (sólo piezas presentes).
 // Intento principal: usa APOC para travesía eficiente.
 export const getComponenteQueryAPOC = `
-  MATCH (seed:Pieza {id: $seedId, presente: true})
+  MATCH (seed:Pieza {serial: $seedId, presente: true})
   CALL apoc.path.subgraphNodes(seed, {
     relationshipFilter: 'CONECTA_CON',
     labelFilter: '+Pieza'
   }) YIELD node
   WHERE node.presente = true
-  RETURN collect(DISTINCT node.id) AS componente
+  RETURN collect(DISTINCT node.serial) AS componente
 `;
 
 // Componente conexo que contiene la pieza $seedId usando sólo Cypher puro (fallback).
 export const getComponenteQueryPuro = `
-  MATCH (seed:Pieza {id: $seedId, presente: true})
+  MATCH (seed:Pieza {serial: $seedId, presente: true})
   MATCH path = (seed)-[:CONECTA_CON*0..]-(p:Pieza)
   WHERE ALL(nodo IN nodes(path) WHERE nodo.presente = true)
-  RETURN collect(DISTINCT p.id) AS componente
+  RETURN collect(DISTINCT p.serial) AS componente
 `;

@@ -165,7 +165,7 @@ export async function detectIsolatedRegions(puzzleId, auth) {
   try {
     // Obtener todos los IDs de piezas presentes
     const allResult = await session.run(
-      'MATCH (p:Pieza {rompecabezas_id: $puzzleId, presente: true}) RETURN collect(p.id) AS todos',
+      'MATCH (p:Pieza {rompecabezas_serial: $puzzleId, presente: true}) RETURN collect(p.serial) AS todos',
       { puzzleId }
     );
 

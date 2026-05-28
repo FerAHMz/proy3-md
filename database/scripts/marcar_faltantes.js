@@ -87,7 +87,7 @@ async function main() {
 
     // ── Validar que el puzzle existe ──────────────────────────────────────────
     const checkR = await runQuery(driver,
-      'MATCH (r:Rompecabezas {id: $puzzleId}) RETURN r.nombre AS nombre',
+      'MATCH (r:Rompecabezas {serial: $puzzleId}) RETURN r.nombre AS nombre',
       { puzzleId }
     );
     if (checkR.records.length === 0) {
@@ -98,7 +98,7 @@ async function main() {
 
     // ── Marcar piezas como faltantes ─────────────────────────────────────────
     const setR = await runQuery(driver,
-      'MATCH (p:Pieza) WHERE p.id IN $ids SET p.presente = false RETURN collect(p.id) AS marcadas',
+      'MATCH (p:Pieza) WHERE p.serial IN $ids SET p.presente = false RETURN collect(p.serial) AS marcadas',
       { ids: piezaIds }
     );
     const marcadas = setR.records[0]?.get('marcadas') ?? [];
